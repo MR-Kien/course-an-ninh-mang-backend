@@ -1,9 +1,9 @@
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
-const pool = require("../config/db"); // file kết nối PostgreSQL
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
+import pool from "../config/db.js";
 
 // --- REGISTER ---
-const register = async (req, res) => {
+export const register = async (req, res) => {
   const { ten, email, matkhau, ngaysinh } = req.body;
   try {
     // Kiểm tra email tồn tại chưa
@@ -35,7 +35,7 @@ const register = async (req, res) => {
 };
 
 // --- LOGIN ---
-const login = async (req, res) => {
+export const login = async (req, res) => {
   const { email, matkhau } = req.body;
 
   try {
@@ -61,5 +61,3 @@ const login = async (req, res) => {
     res.status(500).json({ message: "Lỗi server" });
   }
 };
-
-module.exports = { register, login };

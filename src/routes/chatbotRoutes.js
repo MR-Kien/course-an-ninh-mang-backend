@@ -1,7 +1,8 @@
 import express from "express";
-import { getUserDashboard } from "../controllers/userController.js";
-
 const router = express.Router();
+import { sendChat } from "../controllers/chatbotController.js";
+
 // định nghĩa API và map tới controller
-router.get("/", getUserDashboard);
+router.post("/chat", sendChat);
+
 export default router;

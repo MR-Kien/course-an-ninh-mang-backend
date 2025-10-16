@@ -1,10 +1,18 @@
-const express = require("express");
-const router = express.Router();
-const courseController = require("../controllers/courseController.js");
+import express from "express";
+import {
+  getAllCourses,
+  getCourseDetail,
+  getCourseContent,
+  getCTFData,
+  getLabsData,
+} from "../controllers/courseController.js";
 
-router.get("/", courseController.getAllCourses);
-router.get("/:id", courseController.getCourseDetail);
-router.get("/:id/content", courseController.getCourseContent);
-router.get("/ctf", courseController.getCTFData);
-router.get("/lab", courseController.getLabData);
-module.exports = router;
+const router = express.Router();
+
+router.get("/", getAllCourses);
+router.get("/:id", getCourseDetail);
+router.get("/:id/content", getCourseContent);
+router.get("/ctf", getCTFData);
+router.get("/lab", getLabsData);
+
+export default router;
