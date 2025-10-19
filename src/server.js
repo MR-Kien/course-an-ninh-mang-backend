@@ -27,29 +27,46 @@ const app = express();
 //     allowedHeaders: ["Content-Type", "Authorization"],
 //   })
 // );
+// app.use(
+//   cors({
+//     origin: [
+//       "http://localhost:3000", // khi chạy frontend local
+//       "https://courseanninhmang.vercel.app", // domain frontend trên vercel (thay bằng đúng tên thật)
+//     ],
+//     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+//     credentials: true,
+//     allowedHeaders: ["Content-Type", "Authorization"],
+//     optionsSuccessStatus: 200,
+//   })
+// );
+// app.use((req, res, next) => {
+//   if (req.method === "OPTIONS") {
+//     res.header("Access-Control-Allow-Origin", req.headers.origin);
+//     res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+//     res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+//     res.header("Access-Control-Allow-Credentials", "true");
+//     return res.status(200).end();
+//   }
+//   next();
+// });
+const allowedOrigins = [
+  process.env.CLIENT_URL || "http://localhost:3000",
+  "https://courseanninhmang.vercel.app",
+];
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000", // khi chạy frontend local
-      "https://courseanninhmang.vercel.app", // domain frontend trên vercel (thay bằng đúng tên thật)
-    ],
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
-    optionsSuccessStatus: 200,
+    credentials: true, // Nếu dùng cookie hoặc auth token
   })
 );
-app.use((req, res, next) => {
-  if (req.method === "OPTIONS") {
-    res.header("Access-Control-Allow-Origin", req.headers.origin);
-    res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    res.header("Access-Control-Allow-Credentials", "true");
-    return res.status(200).end();
-  }
-  next();
-});
-
 app.use(express.json());
 
 // Xử lý các yêu cầu preflight cho tất cả các route
