@@ -39,7 +39,7 @@ app.use(
 app.use(express.json());
 
 // Xử lý các yêu cầu preflight cho tất cả các route
-app.options("/*", cors());
+// app.options("/*", cors());
 
 // Routes
 app.use("/api/auth", authRoutes);
