@@ -37,7 +37,7 @@ const OPENROUTER_API = "https://openrouter.ai/api/v1/chat/completions";
 
 export const getUserTopics = async (req, res) => {
   try {
-    const userId = parseInt(req.params.userId);
+    const userId = req.user?.id;
     const query = `SELECT id, ten, mota, userid FROM chudeai WHERE userid = $1 ORDER BY id ASC;`;
     const result = await pool.query(query, [userId]);
     res.json(result.rows);
