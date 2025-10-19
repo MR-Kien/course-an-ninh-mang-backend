@@ -27,6 +27,18 @@ const app = express();
 //     allowedHeaders: ["Content-Type", "Authorization"],
 //   })
 // );
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000", // khi chạy frontend local
+      "https://courseanninhmang.vercel.app", // domain frontend trên vercel (thay bằng đúng tên thật)
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
+    optionsSuccessStatus: 200,
+  })
+);
 
 app.use(express.json());
 
