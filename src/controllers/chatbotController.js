@@ -31,7 +31,7 @@
 //     });
 //   }
 // };
-import axios from "axios";
+// import axios from "axios";
 import pool from "../config/db.js";
 const OPENROUTER_API = "https://openrouter.ai/api/v1/chat/completions";
 
