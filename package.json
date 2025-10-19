@@ -4,7 +4,8 @@
   "main": "src/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node src/server.js",
+    "start": "node server",
+    "vercel-start": "node server.js",
     "build": "echo \"Không cần build vì Node.js chạy trực tiếp\""
   },
   "keywords": [],
