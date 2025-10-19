@@ -20,18 +20,18 @@ dotenv.config();
 const app = express();
 
 // Cấu hình CORS với các tùy chọn phù hợp cho Vercel
-app.use(
-  cors({
-    origin: process.env.CLIENT_URL || "*", // Sử dụng biến môi trường cho URL client
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+// app.use(
+//   cors({
+//     origin: process.env.CLIENT_URL || "*", // Sử dụng biến môi trường cho URL client
+//     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+//     allowedHeaders: ["Content-Type", "Authorization"],
+//   })
+// );
 
 app.use(express.json());
 
 // Xử lý các yêu cầu preflight cho tất cả các route
-app.options("*", cors());
+// app.options("*", cors());
 
 // Routes
 app.use("/api/auth", authRoutes);
