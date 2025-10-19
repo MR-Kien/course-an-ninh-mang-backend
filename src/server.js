@@ -18,37 +18,6 @@ import paymentRoutes from "./routes/paymentRoutes.js";
 
 dotenv.config();
 const app = express();
-
-// Cấu hình CORS với các tùy chọn phù hợp cho Vercel
-// app.use(
-//   cors({
-//     origin: process.env.CLIENT_URL || "*", // Sử dụng biến môi trường cho URL client
-//     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-//     allowedHeaders: ["Content-Type", "Authorization"],
-//   })
-// );
-// app.use(
-//   cors({
-//     origin: [
-//       "http://localhost:3000", // khi chạy frontend local
-//       "https://courseanninhmang.vercel.app", // domain frontend trên vercel (thay bằng đúng tên thật)
-//     ],
-//     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-//     credentials: true,
-//     allowedHeaders: ["Content-Type", "Authorization"],
-//     optionsSuccessStatus: 200,
-//   })
-// );
-// app.use((req, res, next) => {
-//   if (req.method === "OPTIONS") {
-//     res.header("Access-Control-Allow-Origin", req.headers.origin);
-//     res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-//     res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-//     res.header("Access-Control-Allow-Credentials", "true");
-//     return res.status(200).end();
-//   }
-//   next();
-// });
 const allowedOrigins = [
   process.env.CLIENT_URL || "http://localhost:3000",
   "https://courseanninhmang.vercel.app",
@@ -70,7 +39,7 @@ app.use(
 app.use(express.json());
 
 // Xử lý các yêu cầu preflight cho tất cả các route
-// app.options("*", cors());
+app.options("/*", cors());
 
 // Routes
 app.use("/api/auth", authRoutes);
