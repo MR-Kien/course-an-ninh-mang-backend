@@ -81,7 +81,11 @@ export const getAllCourses = async (req, res) => {
 export const getCourseDetail = async (req, res) => {
   try {
     const { id: courseId } = req.params; // Lấy ID khóa học từ URL: /api/courses/:id
-    const userId = req.user?.id || 1; // Giả sử lấy từ auth middleware
+    const userRole = req.user?.role || "user"; // Giả sử lấy từ auth middleware
+    let userId = req.user?.id || 1; // Giả sử lấy từ auth middleware
+    if (userRole === "admin") {
+      userId = 3;
+    }
 
     if (!userId) {
       return res
@@ -349,7 +353,11 @@ export const getCourseDetail = async (req, res) => {
 export const getCourseContent = async (req, res) => {
   try {
     const { id: lessonId } = req.params; // Lấy từ URL: /api/lessons/:id/content
-    const userId = req.user?.id || 1; // Tùy chọn, nếu cần auth
+    const userRole = req.user?.role || "user"; // Giả sử lấy từ auth middleware
+    let userId = req.user?.id || 1; // Giả sử lấy từ auth middleware
+    if (userRole === "admin") {
+      userId = 3;
+    }
 
     if (!lessonId) {
       return res.status(400).json({ message: "Thiếu ID bài học" });
