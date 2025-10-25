@@ -14,6 +14,36 @@ const transporter = nodemailer.createTransport({
   },
 });
 // --- REGISTER ---
+// export const register = async (req, res) => {
+//   const { ten, email, matkhau, ngaysinh } = req.body;
+//   try {
+//     // Kiểm tra email tồn tại chưa
+//     const existingUser = await pool.query(
+//       "SELECT * FROM users WHERE email = $1",
+//       [email]
+//     );
+//     if (existingUser.rows.length > 0) {
+//       return res.status(400).json({ message: "Email đã tồn tại" });
+//     }
+
+//     // Mã hoá mật khẩu
+//     const hashedPassword = await bcrypt.hash(matkhau, 10);
+
+//     // Tạo user mới
+//     const newUser = await pool.query(
+//       "INSERT INTO users (ten, matkhau, email, ngaysinh) VALUES ($1, $2, $3, $4) RETURNING *",
+//       [ten, hashedPassword, email, ngaysinh]
+//     );
+
+//     res.status(201).json({
+//       message: "Đăng ký thành công",
+//       user: newUser.rows[0],
+//     });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ message: "Lỗi server" });
+//   }
+// };
 export const register = async (req, res) => {
   const { ten, email, matkhau, ngaysinh } = req.body;
   try {
@@ -29,14 +59,28 @@ export const register = async (req, res) => {
     // Mã hoá mật khẩu
     const hashedPassword = await bcrypt.hash(matkhau, 10);
 
-    // Tạo user mới
+    // Tạo user mới và lấy user_id
     const newUser = await pool.query(
-      "INSERT INTO users (ten, matkhau, email, ngaysinh) VALUES ($1, $2, $3, $4) RETURNING *",
+      "INSERT INTO users (ten, matkhau, email, ngaysinh) VALUES ($1, $2, $3, $4) RETURNING id, ten, email, ngaysinh",
       [ten, hashedPassword, email, ngaysinh]
     );
+    const userId = newUser.rows[0].id;
+
+    // Lấy tất cả các khoahoc_id từ bảng khoahoc
+    const allCourses = await pool.query("SELECT id FROM khoahoc");
+    const courseIds = allCourses.rows;
+
+    // Cấp toàn bộ khóa học cho user với trạng thái 'in-progress'
+    for (const course of courseIds) {
+      await pool.query(
+        "INSERT INTO user_khoahoc (user_id, khoahoc_id, trangthai) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
+        [userId, course.id, "in-progress"]
+      );
+    }
 
     res.status(201).json({
-      message: "Đăng ký thành công",
+      message:
+        "Đăng ký thành công và đã cấp toàn bộ khóa học với trạng thái in-progress",
       user: newUser.rows[0],
     });
   } catch (err) {
@@ -44,7 +88,6 @@ export const register = async (req, res) => {
     res.status(500).json({ message: "Lỗi server" });
   }
 };
-
 // --- LOGIN ---
 export const login = async (req, res) => {
   const { email, matkhau } = req.body;
