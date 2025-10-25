@@ -15,6 +15,7 @@ import courseRoutes from "./routes/courseRoutes.js";
 import chatbotRoutes from "./routes/chatbotRoutes.js";
 import authenticateToken from "./middleware/authMiddleware.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
+import uploadRoutes from "./routes/uploadRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -48,6 +49,7 @@ app.use("/api/user", authenticateToken, userRoutes);
 app.use("/api/courses", authenticateToken, courseRoutes);
 app.use("/api/chatbot", authenticateToken, chatbotRoutes);
 app.use("/api/payment", authenticateToken, paymentRoutes);
+app.use("/api/upload", authenticateToken, uploadRoutes);
 
 // Route test cần token
 app.get("/api/protected", authenticateToken, (req, res) => {
