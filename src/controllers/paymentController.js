@@ -121,7 +121,7 @@
 import pool from "../config/db.js";
 import crypto from "crypto";
 
-// Cấu hình MoMo Test (Sandbox)
+// 🟢 Cấu hình MoMo Sandbox
 const MOMO_CONFIG = {
   partnerCode: process.env.MOMO_PARTNER_CODE || "MOMO",
   accessKey: process.env.MOMO_ACCESS_KEY || "F8BBA842ECF85",
@@ -129,14 +129,13 @@ const MOMO_CONFIG = {
   endpoint: "https://test-payment.momo.vn/v2/gateway/api/create",
 };
 
-// 🟣 Hàm gửi request tạo thanh toán MoMo bằng FETCH
+// 🟣 Hàm gọi API MoMo qua FETCH
 const createMomoPayment = async (requestBody) => {
   try {
     const response = await fetch(MOMO_CONFIG.endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(requestBody),
-      // Không có timeout sẵn trong fetch — có thể tự thêm AbortController nếu muốn
     });
 
     if (!response.ok) {
@@ -144,23 +143,26 @@ const createMomoPayment = async (requestBody) => {
       throw new Error(`MoMo API HTTP ${response.status}: ${text}`);
     }
 
-    const data = await response.json();
-    return data;
+    return await response.json();
   } catch (error) {
     console.error("MoMo API Error:", error.message);
     throw { resultCode: 9999, message: "Lỗi kết nối MoMo" };
   }
 };
 
-// 🟡 IPN Handler (giữ nguyên)
+// 🟡 IPN Handler (nhận callback từ MoMo)
 export const ipnHandler = async (req, res) => {
   try {
     const body = req.body;
 
+    // 🔍 Lấy paymentId từ extraData
+    const extraData = body.extraData || "";
+    const paymentId = extraData.split("paymentId=")[1];
+
     const rawSignature = [
       `accessKey=${MOMO_CONFIG.accessKey}`,
       `amount=${body.amount}`,
-      `extraData=${body.extraData || ""}`,
+      `extraData=${extraData}`,
       `message=${body.message || ""}`,
       `orderId=${body.orderId}`,
       `orderInfo=${body.orderInfo}`,
@@ -179,28 +181,31 @@ export const ipnHandler = async (req, res) => {
       .digest("hex");
 
     if (signature !== body.signature) {
-      console.error("Invalid IPN signature");
+      console.error("❌ Invalid IPN signature");
       return res.status(200).send("OK");
     }
 
     if (body.resultCode !== "0") {
-      console.log("Payment failed:", body);
+      console.log("❌ Payment failed:", body);
       await pool.query(
         "UPDATE thanhtoan SET trang_thai = 'failed' WHERE id = $1",
-        [body.orderId]
+        [paymentId]
       );
       return res.status(200).send("OK");
     }
 
+    // ✅ Xử lý thanh toán thành công
     const paymentQuery = `
       SELECT tt.*, u.role as current_role
-      FROM thanhtoan tt JOIN users u ON tt.user_id = u.id
+      FROM thanhtoan tt 
+      JOIN users u ON tt.user_id = u.id
       WHERE tt.id = $1 AND tt.trang_thai = 'pending'
     `;
-    const paymentResult = await pool.query(paymentQuery, [body.orderId]);
+    const paymentResult = await pool.query(paymentQuery, [paymentId]);
     const payment = paymentResult.rows[0];
 
     if (!payment || parseInt(body.amount) !== payment.so_tien) {
+      console.warn("⚠️ Sai số tiền hoặc không tìm thấy giao dịch:", paymentId);
       return res.status(200).send("OK");
     }
 
@@ -217,6 +222,7 @@ export const ipnHandler = async (req, res) => {
       user_premium: 2,
       user_year: 3,
     };
+
     if (
       !newRole ||
       rolePriority[payment.current_role] >= rolePriority[newRole]
@@ -227,7 +233,7 @@ export const ipnHandler = async (req, res) => {
     await pool.query("BEGIN");
     await pool.query(
       "UPDATE thanhtoan SET trang_thai = 'completed' WHERE id = $1",
-      [body.orderId]
+      [paymentId]
     );
     await pool.query("UPDATE users SET role = $1 WHERE id = $2", [
       newRole,
@@ -235,7 +241,7 @@ export const ipnHandler = async (req, res) => {
     ]);
     await pool.query("COMMIT");
 
-    console.log("✅ MoMo Payment COMPLETED:", body.orderId);
+    console.log("✅ MoMo Payment COMPLETED:", paymentId);
     res.status(200).send("OK");
   } catch (error) {
     console.error("IPN error:", error);
@@ -243,7 +249,7 @@ export const ipnHandler = async (req, res) => {
   }
 };
 
-// 🟢 Hàm chính xử lý thanh toán
+// 🟢 Hàm xử lý thanh toán chính
 export const processPayment = async (req, res) => {
   const clientUrl = `${req.protocol}://${req.get("host")}`;
   try {
@@ -270,6 +276,7 @@ export const processPayment = async (req, res) => {
       "Gói Nâng Cao": { role: "user_premium", price: 89000 },
       "Gói Năm": { role: "user_year", price: 1299000 },
     };
+
     if (!packageConfig[ten_goi] || so_tien !== packageConfig[ten_goi].price)
       return res.status(400).json({ message: "Gói/số tiền không hợp lệ" });
 
@@ -293,7 +300,7 @@ export const processPayment = async (req, res) => {
         .status(400)
         .json({ message: `Không thể hạ cấp từ ${currentRole}` });
 
-    // 🏦 Nếu là Bank Transfer
+    // 🏦 Bank Transfer
     if (phuong_thuc_thanh_toan === "bank_transfer") {
       await pool.query("BEGIN");
       const {
@@ -323,7 +330,7 @@ export const processPayment = async (req, res) => {
       });
     }
 
-    // 💳 Nếu là MoMo
+    // 💳 MoMo Payment
     const {
       rows: [payment],
     } = await pool.query(
@@ -341,8 +348,11 @@ export const processPayment = async (req, res) => {
     );
 
     const paymentId = payment.id;
+
+    // ⚙️ requestId & orderId theo chuẩn MoMo
     const requestId = `${MOMO_CONFIG.partnerCode}${Date.now()}`;
-    const orderId = paymentId.toString();
+    const orderId = requestId;
+
     const orderInfo = `Nâng cấp ${ten_goi}`;
     const amount = so_tien.toString();
     const extraData = `paymentId=${paymentId}`;
@@ -370,7 +380,6 @@ export const processPayment = async (req, res) => {
       lang: "vi",
     };
 
-    // 🟣 Gọi MoMo bằng FETCH (thay axios)
     const momoResponse = await createMomoPayment(requestBody);
 
     if (momoResponse.resultCode === 0) {
@@ -379,6 +388,8 @@ export const processPayment = async (req, res) => {
         payUrl: momoResponse.payUrl,
         qrCode: momoResponse.qrCode,
         payment_id: paymentId,
+        orderId,
+        requestId,
       });
     } else {
       await pool.query("DELETE FROM thanhtoan WHERE id = $1", [paymentId]);
