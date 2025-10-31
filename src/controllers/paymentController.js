@@ -120,7 +120,6 @@
 // };
 import pool from "../config/db.js";
 import crypto from "crypto";
-import axios from "axios"; // npm install axios
 
 // Cấu hình MoMo Test (Sandbox)
 const MOMO_CONFIG = {
@@ -130,30 +129,34 @@ const MOMO_CONFIG = {
   endpoint: "https://test-payment.momo.vn/v2/gateway/api/create",
 };
 
-// Function gửi request tạo payment MoMo bằng **AXIOS** (dễ dùng hơn!)
+// 🟣 Hàm gửi request tạo thanh toán MoMo bằng FETCH
 const createMomoPayment = async (requestBody) => {
   try {
-    const response = await axios.post(MOMO_CONFIG.endpoint, requestBody, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      timeout: 10000, // 10s timeout
+    const response = await fetch(MOMO_CONFIG.endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(requestBody),
+      // Không có timeout sẵn trong fetch — có thể tự thêm AbortController nếu muốn
     });
-    return response.data;
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`MoMo API HTTP ${response.status}: ${text}`);
+    }
+
+    const data = await response.json();
+    return data;
   } catch (error) {
-    console.error("MoMo API Error:", error.response?.data || error.message);
-    throw (
-      error.response?.data || { resultCode: 9999, message: "Lỗi kết nối MoMo" }
-    );
+    console.error("MoMo API Error:", error.message);
+    throw { resultCode: 9999, message: "Lỗi kết nối MoMo" };
   }
 };
 
-// Handler cho IPN (Notify URL) - Giữ nguyên
+// 🟡 IPN Handler (giữ nguyên)
 export const ipnHandler = async (req, res) => {
   try {
     const body = req.body;
 
-    // Raw signature cho IPN (theo docs MoMo)
     const rawSignature = [
       `accessKey=${MOMO_CONFIG.accessKey}`,
       `amount=${body.amount}`,
@@ -177,7 +180,7 @@ export const ipnHandler = async (req, res) => {
 
     if (signature !== body.signature) {
       console.error("Invalid IPN signature");
-      return res.status(200).send("OK"); // Vẫn OK cho MoMo
+      return res.status(200).send("OK");
     }
 
     if (body.resultCode !== "0") {
@@ -189,7 +192,6 @@ export const ipnHandler = async (req, res) => {
       return res.status(200).send("OK");
     }
 
-    // Update thành công
     const paymentQuery = `
       SELECT tt.*, u.role as current_role
       FROM thanhtoan tt JOIN users u ON tt.user_id = u.id
@@ -241,7 +243,7 @@ export const ipnHandler = async (req, res) => {
   }
 };
 
-// Process payment chính - **ĐÃ DÙNG AXIOS**
+// 🟢 Hàm chính xử lý thanh toán
 export const processPayment = async (req, res) => {
   const clientUrl = `${req.protocol}://${req.get("host")}`;
   try {
@@ -255,7 +257,6 @@ export const processPayment = async (req, res) => {
       so_tien,
     } = req.body;
 
-    // Validation (giữ nguyên)
     if (!userId) return res.status(401).json({ message: "Vui lòng đăng nhập" });
     if (!ho_ten || !email || !phuong_thuc_thanh_toan || !ten_goi || !so_tien)
       return res.status(400).json({ message: "Thiếu thông tin" });
@@ -292,7 +293,7 @@ export const processPayment = async (req, res) => {
         .status(400)
         .json({ message: `Không thể hạ cấp từ ${currentRole}` });
 
-    // **BANK TRANSFER** (giả lập)
+    // 🏦 Nếu là Bank Transfer
     if (phuong_thuc_thanh_toan === "bank_transfer") {
       await pool.query("BEGIN");
       const {
@@ -322,8 +323,7 @@ export const processPayment = async (req, res) => {
       });
     }
 
-    // **MOMO** 🚀
-    // Tạo pending payment
+    // 💳 Nếu là MoMo
     const {
       rows: [payment],
     } = await pool.query(
@@ -339,9 +339,8 @@ export const processPayment = async (req, res) => {
         so_tien,
       ]
     );
-    const paymentId = payment.id;
 
-    // Tạo MoMo request
+    const paymentId = payment.id;
     const requestId = `${MOMO_CONFIG.partnerCode}${Date.now()}`;
     const orderId = paymentId.toString();
     const orderInfo = `Nâng cấp ${ten_goi}`;
@@ -371,21 +370,22 @@ export const processPayment = async (req, res) => {
       lang: "vi",
     };
 
-    // **GỌI AXIOS**
+    // 🟣 Gọi MoMo bằng FETCH (thay axios)
     const momoResponse = await createMomoPayment(requestBody);
 
     if (momoResponse.resultCode === 0) {
       return res.json({
-        message: "✅ Tạo MoMo QR/URL thành công!",
+        message: "✅ Tạo MoMo URL thành công!",
         payUrl: momoResponse.payUrl,
-        qrCode: momoResponse.qrCode, // Nếu có
+        qrCode: momoResponse.qrCode,
         payment_id: paymentId,
       });
     } else {
       await pool.query("DELETE FROM thanhtoan WHERE id = $1", [paymentId]);
-      return res
-        .status(400)
-        .json({ message: "❌ Lỗi MoMo", error: momoResponse });
+      return res.status(400).json({
+        message: "❌ Lỗi MoMo",
+        error: momoResponse,
+      });
     }
   } catch (error) {
     console.error("Payment error:", error);
