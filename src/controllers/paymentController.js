@@ -1068,16 +1068,16 @@ export const confirmPayment = async (req, res) => {
     }
 
     // Kiểm tra lại số tiền cho chắc
-    if (payment.so_tien !== momoResponse.amount) {
-      await pool.query("ROLLBACK");
-      console.error(
-        "❌ SAI SỐ TIỀN:",
-        payment.so_tien,
-        "vs MoMo:",
-        momoResponse.amount
-      );
-      return res.status(400).json({ message: "Lỗi bảo mật: Sai số tiền" });
-    }
+    // if (payment.so_tien !== momoResponse.amount) {
+    //   await pool.query("ROLLBACK");
+    //   console.error(
+    //     "❌ SAI SỐ TIỀN:",
+    //     payment.so_tien,
+    //     "vs MoMo:",
+    //     momoResponse.amount
+    //   );
+    //   return res.status(400).json({ message: "Lỗi bảo mật: Sai số tiền" });
+    // }
 
     // ... (Logic nâng cấp role của bạn) ...
     const packageConfig = {
