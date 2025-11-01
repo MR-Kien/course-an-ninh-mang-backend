@@ -16,7 +16,7 @@ import chatbotRoutes from "./routes/chatbotRoutes.js";
 import authenticateToken from "./middleware/authMiddleware.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
-import { ipnHandler } from "./controllers/paymentController.js";
+// import { ipnHandler } from "./controllers/paymentController.js";
 dotenv.config();
 const app = express();
 const allowedOrigins = [
@@ -39,11 +39,11 @@ app.use(
   })
 );
 
-app.post(
-  "/api/payment/notify",
-  express.raw({ type: "application/json" }), // Dùng raw parser
-  ipnHandler // Gọi thẳng vào handler
-);
+// app.post(
+//   "/api/payment/notify",
+//   express.raw({ type: "application/json" }), // Dùng raw parser
+//   ipnHandler // Gọi thẳng vào handler
+// );
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
