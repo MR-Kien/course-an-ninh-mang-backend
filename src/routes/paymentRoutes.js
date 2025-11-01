@@ -7,6 +7,6 @@ import authenticateToken from "../middleware/authMiddleware.js";
 const router = express.Router();
 
 router.post("/", authenticateToken, processPayment);
-router.post("/notify", ipnHandler);
+router.post("/notify", express.raw({ type: "application/json" }), ipnHandler);
 
 export default router;
