@@ -48,7 +48,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/user", authenticateToken, userRoutes);
 app.use("/api/courses", authenticateToken, courseRoutes);
 app.use("/api/chatbot", authenticateToken, chatbotRoutes);
-app.use("/api/payment", authenticateToken, paymentRoutes);
+app.use("/api/payment", paymentRoutes);
 app.use("/api/upload", authenticateToken, uploadRoutes);
 
 // Route test cần token
