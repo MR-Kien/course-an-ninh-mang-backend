@@ -437,6 +437,7 @@ const createMomoPayment = async (requestBody) => {
 // 🟡 IPN Handler (MoMo gọi về)
 export const ipnHandler = async (req, res) => {
   try {
+    console.log("IPN received:", req);
     // 🔹 Parse thủ công vì dùng express.raw()
     const body = JSON.parse(req.body.toString());
 
