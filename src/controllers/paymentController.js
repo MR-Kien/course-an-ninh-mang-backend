@@ -812,9 +812,9 @@ import crypto from "crypto";
 
 // 🟢 1. Cấu hình MoMo (Đã sửa: Thêm endpointQuery)
 const MOMO_CONFIG = {
-  partnerCode: process.env.MOMO_PARTNER_CODE || "MOMO",
-  accessKey: process.env.MOMO_ACCESS_KEY || "F8BBA842ECF85",
-  secretKey: process.env.MOMO_SECRET_KEY || "K951B6PE1waDMi640xX08PD3vg6EkVlz",
+  partnerCode: "MOMO",
+  accessKey: "F8BBA842ECF85",
+  secretKey: "K951B6PE1waDMi640xX08PD3vg6EkVlz",
   endpointCreate: "https://test-payment.momo.vn/v2/gateway/api/create", // Đổi tên từ 'endpoint'
   endpointQuery: "https://test-payment.momo.vn/v2/gateway/api/query", // 👈 THÊM MỚI
 };
@@ -918,10 +918,8 @@ export const processPayment = async (req, res) => {
     const extraData = `paymentId=${paymentId}`;
 
     // ❗️ 2. SỬA LỖI CRITICAL: 'redirectUrl' phải là link Frontend
-    const clientUrl = process.env.CLIENT_URL || "http://localhost:3000"; // 👈 Sửa ở .env
-    const serverUrl =
-      process.env.SERVER_URL ||
-      "https://course-an-ninh-mang-backend.vercel.app";
+    const clientUrl = "http://localhost:3000"; // 👈 Sửa ở .env
+    const serverUrl = "https://course-an-ninh-mang-backend.vercel.app";
 
     const redirectUrl = `${clientUrl}/payment/return`; // 👈 SỬA Ở ĐÂY
     const ipnUrl = `${serverUrl}/api/payment/notify`; // 👈 Vẫn phải có, dù ta không dùng
