@@ -641,7 +641,7 @@ export const processPayment = async (req, res) => {
     const orderInfo = `Nâng cấp ${ten_goi}`;
     const amount = so_tien.toString();
     const extraData = `paymentId=${paymentId}`;
-    const redirectUrl = `https://course-an-ninh-mang.vercel.app/payment/return?paymentId=${paymentId}`;
+    const redirectUrl = `http://localhost:3000/payment/return?paymentId=${paymentId}`;
     const ipnUrl = `https://course-an-ninh-mang-backend.vercel.app/api/payment/notify`;
 
     const rawSignature = `accessKey=${MOMO_CONFIG.accessKey}&amount=${amount}&extraData=${extraData}&ipnUrl=${ipnUrl}&orderId=${orderId}&orderInfo=${orderInfo}&partnerCode=${MOMO_CONFIG.partnerCode}&redirectUrl=${redirectUrl}&requestId=${requestId}&requestType=captureWallet`;
