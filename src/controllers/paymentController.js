@@ -933,7 +933,7 @@ export const processPayment = async (req, res) => {
     const extraData = `paymentId=${paymentId}`;
 
     // ❗️ 2. SỬA LỖI CRITICAL: 'redirectUrl' phải là link Frontend
-    const clientUrl = "http://localhost:3000"; // 👈 Sửa ở .env
+    const clientUrl = "https://lozoacademy.com.vn"; // 👈 Sửa ở .env
     const serverUrl = "https://course-an-ninh-mang-backend.vercel.app";
 
     const redirectUrl = `${clientUrl}/payment/return`; // 👈 SỬA Ở ĐÂY
