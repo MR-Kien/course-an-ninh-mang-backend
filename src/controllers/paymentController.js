@@ -642,7 +642,8 @@ export const processPayment = async (req, res) => {
     const amount = so_tien.toString();
     const extraData = `paymentId=${paymentId}`;
     const redirectUrl = `http://localhost:3000/payment/return?paymentId=${paymentId}`;
-    const ipnUrl = `https://course-an-ninh-mang-backend.vercel.app/api/payment/notify`;
+    // const ipnUrl = `https://course-an-ninh-mang-backend.vercel.app/api/payment/notify`;
+    const ipnUrl = `https://webhook.site/a7edcc63-9fde-4144-bb99-d7cee3d7d028`;
 
     const rawSignature = `accessKey=${MOMO_CONFIG.accessKey}&amount=${amount}&extraData=${extraData}&ipnUrl=${ipnUrl}&orderId=${orderId}&orderInfo=${orderInfo}&partnerCode=${MOMO_CONFIG.partnerCode}&redirectUrl=${redirectUrl}&requestId=${requestId}&requestType=captureWallet`;
     const signature = crypto
