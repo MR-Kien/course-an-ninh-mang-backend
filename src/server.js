@@ -39,8 +39,8 @@ app.use(
   })
 );
 
-app.use("/api/payment", paymentRoutes);
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Xử lý các yêu cầu preflight cho tất cả các route
 // app.options("/*", cors());
@@ -50,7 +50,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/user", authenticateToken, userRoutes);
 app.use("/api/courses", authenticateToken, courseRoutes);
 app.use("/api/chatbot", authenticateToken, chatbotRoutes);
-
+app.use("/api/payment", paymentRoutes);
 app.use("/api/upload", authenticateToken, uploadRoutes);
 
 // Route test cần token
